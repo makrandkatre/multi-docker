@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t makrandkatre/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run makrandkatre/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t makrandkatre/multi-client ./client
+    - docker build -t makrandkatre/multi-nginx ./nginx
+    - docker build -t makrandkatre/multi-server ./server
+    - docker build -t makrandkatre/multi-worker ./worker
+    #log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    #Take those images and push them to docker hub
+    - docker push makrandkatre/multi-client
+    - docker push makrandkatre/multi-nginx
+    - docker push makrandkatre/multi-server
+    - docker push makrandkatre/multi-worker
